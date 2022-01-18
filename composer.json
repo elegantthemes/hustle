@@ -1,0 +1,39 @@
+{
+  "name": "elegantthemes/hustle",
+  "description": "Simple job queues for PHP, backed by Redis.",
+  "type": "library",
+  "license": "GPL-v2-or-later",
+  "homepage": "https://github.com/elegantthemes/hustle",
+  "support": {
+    "issues": "https://github.com/elegantthemes/hustle/issues"
+  },
+  "authors": [
+    {
+      "name": "Dustin Falgout",
+      "email": "dustin@elegantthemes.com",
+      "homepage": "https://github.com/lots0logs",
+      "role": "Developer"
+    }
+  ],
+  "autoload": {
+    "psr-4": {
+      "ET\\Hustle\\": "src/"
+    }
+  },
+  "repositories": [
+    {
+      "type": "composer",
+      "url": "https://elegantthemes.repo.repman.io",
+      "only": ["elegantthemes/*"]
+    }
+  ],
+  "require": {
+    "php": ">=7.4",
+    "ext-redis": ">=5.35",
+    "elegantthemes/ease": "1.2.4"
+  },
+  "require-dev": {
+    "roave/security-advisories": "dev-master"
+  }
+}
+
