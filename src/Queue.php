@@ -6,75 +6,64 @@ namespace ET\Hustle;
 use Redis, RedisCluster;
 
 
-class Queue {
-
-	protected Client $_client;
+class Queue extends Base {
 
 	public string $name;
 
-	public function __construct( Client $client, string $name = 'default' ) {
-		$this->_client = $client;
+	public function __construct( string $name = 'default' ) {
 		$this->name    = $name;
 	}
 
 	protected function __completed(): string {
-		return $this->_key( 'completed' );
+		return $this->__key( 'completed' );
 	}
 
 	protected function __failed(): string {
-		return $this->_key( 'failed' );
+		return $this->__key( 'failed' );
 	}
 
 	protected function __pending(): string {
-		return $this->_key( 'pending' );
+		return $this->__key( 'pending' );
 	}
 
 	protected function __running(): string {
-		return $this->_key( 'running' );
+		return $this->__key( 'running' );
 	}
 
-	protected function _key( string ...$args ): string {
-		$key = implode( ':', $args );
-
-		return "hustle:queue:{$this->name}:{$key}";
+	protected function __key( string ...$args ): string {
+		return self::_key( 'queues', $this->name, ...$args );
 	}
 
-	protected function _uuid4(): string {
-		return sprintf(
-			'%04x%04x-%04x-%04x-%04x-%04x%04x%04x',
-			mt_rand( 0, 0xffff ),
-			mt_rand( 0, 0xffff ),
-			mt_rand( 0, 0xffff ),
-			mt_rand( 0, 0x0fff ) | 0x4000,
-			mt_rand( 0, 0x3fff ) | 0x8000,
-			mt_rand( 0, 0xffff ),
-			mt_rand( 0, 0xffff ),
-			mt_rand( 0, 0xffff )
-		);
+	public function JOB( string $job_id ): Job {
+		return Job::instance( $this->name, $job_id );
 	}
 
-	public function job( string $jid ): array {
-		$key = $this->_key( 'job', $jid );
-	}
-
-	public function put( callable $job, array $data ): string {
-		$jid = $this->_uuid4();
-		$key = $this->_key( 'job', $jid );
-
-		$data = [
-			'jid'   => $jid,
-			'class' => $job,
-			'data'  => $data,
+	public function put( callable $run, array $data ): string {
+		$details = [
+			'data'      => $data,
+			'callbacks' => [
+				'run'   => $run,
+				'done'  => __CLASS__ . '::done',
+				'error' => __CLASS__ . '::error',
+			],
 		];
 
-		$this->_client->DB()->set( $key, json_encode( $data ) );
-		$this->_client->DB()->rpush( $this->__pending(), $jid );
+		$job = Job::instance( $this->name, null, $details );
 
-		return $jid;
+		self::$_DB->lpush( $this->__pending(), $job->id );
+
+		return $job->id;
 	}
 
-	public function take(): string {
-		
+	public function take(): Job {
+		$job_id = self::$_DB->brpoplpush( $this->__pending(), $this->__running(), 600 );
+		$job    = Job::instance( $this->name, $job_id );
+
+		$job->status = 'running';
+
+		self::$_DB->set( $this->__key( 'jobs', $job_id ), json_encode( $job ) );
+
+		return $job;
 	}
 
 }

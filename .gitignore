@@ -1,0 +1,38 @@
+.idea
+*.iml
+node_modules
+vendor
+.directory
+*.bak
+*.gho
+*.ori
+*.orig
+*.tmp
+.*.kate-swp
+.swp.*
+
+# all files that end in ~ since those are typically temp files
+*~
+
+# temporary files which can be created if a process still has a handle open of a deleted file
+.fuse_hidden*
+
+# KDE directory preferences
+.directory
+
+# Linux trash folder which might appear on any partition or disk
+.Trash-*
+
+# .nfs files are created when an open file is removed but is still being accessed
+.nfs*
+
+.vscode/*
+*.code-workspace
+
+# Local History for Visual Studio Code
+.history/
+
+# General
+.DS_Store
+.AppleDouble
+.LSOverride

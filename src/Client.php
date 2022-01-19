@@ -4,15 +4,9 @@ namespace ET\Hustle;
 
 // External Dependencies
 use Redis, RedisCluster;
-use function et_;
 
 
-class Client {
-
-	/**
-	 * @var Redis|RedisCluster
-	 */
-	protected object $_db;
+class Client extends Base {
 
 	/**
 	 * @var Queue[]
@@ -30,7 +24,7 @@ class Client {
 
 		if ( count( $redis_nodes ) > 1 || is_string( reset( $redis_nodes ) ) ) {
 			// Redis Cluster
-			$this->_db = new RedisCluster( null, $redis_nodes );
+			self::$_DB = new RedisCluster( null, $redis_nodes );
 		} else {
 			// Redis Standalone
 			throw new \ErrorException( 'Support for using redis in standalone mode is not implemented.' );
@@ -41,11 +35,11 @@ class Client {
 	 * @return Redis|RedisCluster
 	 */
 	public function DB(): object {
-		return $this->_db;
+		return self::$_DB;
 	}
 
 	public function QUEUE( string $name = 'default' ): Queue {
-		$this->_queues[ $name ] ??= new Queue( $name, $this );
+		$this->_queues[ $name ] ??= new Queue( $name );
 
 		return $this->_queues[ $name ];
 	}

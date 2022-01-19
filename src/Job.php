@@ -3,44 +3,57 @@
 namespace ET\Hustle;
 
 // Built-in Dependencies
-use JsonSerializable;
+use JsonSerializable, ErrorException;
 
 
-class Job implements JsonSerializable {
+class Job extends Base implements JsonSerializable {
 
-	protected Queue $_queue;
-
-	public string $id;
-
-	/**
-	 * @var callable
-	 */
-	public string $class;
+	public array $callbacks = [
+		'run'   => null,
+		'done'  => null,
+		'error' => null,
+	];
 
 	public array $data;
 
-	public function __construct( Queue $queue, string $class, array $data ) {
-		$this->_queue = $queue;
-		$this->class  = $class;
-		$this->data   = $data;
-		$this->id     = $this->_uuid4();
+	public string $id;
+
+	public string $status;
+
+	public function __construct( string $id, array $details = [] ) {
+		$this->callbacks = $details['callbacks'];
+		$this->data      = $details['data'];
+		$this->id        = $details['id'];
+		$this->status    = $details['status'];
 	}
 
-	protected function _uuid4(): string {
-		return sprintf(
-			'%04x%04x-%04x-%04x-%04x-%04x%04x%04x',
-			mt_rand( 0, 0xffff ),
-			mt_rand( 0, 0xffff ),
-			mt_rand( 0, 0xffff ),
-			mt_rand( 0, 0x0fff ) | 0x4000,
-			mt_rand( 0, 0x3fff ) | 0x8000,
-			mt_rand( 0, 0xffff ),
-			mt_rand( 0, 0xffff ),
-			mt_rand( 0, 0xffff )
-		);
+	public static function instance( string $queue, ?string $id, ?array $details = null ): self {
+		if ( $id ) {
+			// Get existing job details from database
+			$json    = self::$_DB->get( self::_key( 'queues', $queue, 'jobs', $id ) );
+			$details = json_decode( $json, true );
+
+		} else if ( $details ) {
+			// Create new job in database
+			$id = $details['id'] = self::_uuid4();
+
+			$details['status'] = 'pending';
+
+			self::$_DB->set( self::_key( 'queues', $queue, 'jobs', $id ), json_encode( $details ) );
+
+		} else {
+			throw new ErrorException( 'At least one of $id, $details is required.' );
+		}
+
+		return new self( $id, $details );
 	}
 
 	public function jsonSerialize() {
-		// TODO: Implement jsonSerialize() method.
+		return [
+			'id'        => $this->id,
+			'callbacks' => $this->callbacks,
+			'data'      => $this->data,
+			'status'    => $this->status,
+		];
 	}
 }
