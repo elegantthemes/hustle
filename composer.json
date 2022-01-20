@@ -2,7 +2,7 @@
   "name": "elegantthemes/hustle",
   "description": "Simple job queues for PHP, backed by Redis.",
   "type": "library",
-  "license": "GPL-v2-or-later",
+  "license": "GPL-2.0-or-later",
   "homepage": "https://github.com/elegantthemes/hustle",
   "support": {
     "issues": "https://github.com/elegantthemes/hustle/issues"
