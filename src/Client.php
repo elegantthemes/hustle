@@ -15,7 +15,7 @@ class Client extends Base {
 
 	public string $name;
 
-	protected function __construct( string $name = 'default', array $redis_nodes = [] ) {
+	public function __construct( string $name = 'default', array $redis_nodes = [] ) {
 		$this->name = $name;
 
 		if ( ! $redis_nodes ) {

@@ -34,7 +34,7 @@ class Worker extends Base {
 			case 0:
 				// Child Process
 				try {
-					call_user_func( $job->callbacks['run'], $job->data );
+					call_user_func( $job->callbacks['run'], $job->id, $job->data );
 				} catch ( \Exception $err ) {
 					et_error( $err->getMessage() );
 					die( 1 );
