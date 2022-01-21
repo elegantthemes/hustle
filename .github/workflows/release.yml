@@ -26,7 +26,7 @@ jobs:
           git config user.email "${GITHUB_ACTOR}@users.noreply.github.com"
           git config pull.rebase false
           git pull --tags
-          git tag -l --sort=version:refname | tail -n 1 > "${GITHUB_HOME}/current-version"
+          git tag -l --sort=version:refname | tail -n 1 > "${HOME}/current-version"
 
       - name: Setup PHP
         uses: shivammathur/setup-php@v2
@@ -39,7 +39,7 @@ jobs:
         uses: HardNorth/github-version-generate@v1.0.1
         with:
           version-source: file
-          version-file: ${{ env.GITHUB_HOME }}/current-version
+          version-file: ${{ env.HOME }}/current-version
           version-file-extraction-pattern: '[0-9.]+'
 
       - name: Create Release
