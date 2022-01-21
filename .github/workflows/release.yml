@@ -1,7 +1,8 @@
 name: Maybe Create New Release
+on:
   push:
     branches:
-      - master
+      - main
 
 env:
   ACTIONS_ALLOW_UNSECURE_COMMANDS: true
