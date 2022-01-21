@@ -1,0 +1,20 @@
+name: Chores
+on:
+  push:
+    branches:
+      - master
+
+jobs:
+  #==============================#
+  # 1. Trigger Submodules Update #
+  #==============================#
+  DispatchToMetaRepo:
+    if: "github.actor != 'etstaging' && ! contains(toJSON(github.event.commits.*.message), 'build: [ release ]')"
+    runs-on: ubuntu-20.04
+    steps:
+      - name: Repository Dispatch
+        uses: peter-evans/repository-dispatch@v1
+        with:
+          token: ${{ secrets.ETSTAGING_TOKEN }}
+          repository: elegantthemes/meta
+          event-type: master-branch-updated

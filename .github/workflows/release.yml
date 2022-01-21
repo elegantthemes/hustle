@@ -1,0 +1,50 @@
+name: Maybe Create New Release
+  push:
+    branches:
+      - master
+
+env:
+  ACTIONS_ALLOW_UNSECURE_COMMANDS: true
+
+jobs:
+  #==========================#
+  # 1. Create GitHub Release #
+  #==========================#
+  CreateGitHubRelease:
+    if: "contains(toJSON(github.event.commits.*.message), 'build: [release]')"
+    runs-on: ubuntu-20.04
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+        with:
+          token: ${{ secrets.ETSTAGING_TOKEN }}
+
+      - name: Configure Git
+        run: |
+          git config user.name "${GITHUB_ACTOR}"
+          git config user.email "${GITHUB_ACTOR}@users.noreply.github.com"
+          git config pull.rebase false
+          git pull --tags
+          git tag -l --sort=version:refname | tail -n 1 > "${GITHUB_HOME}/current-version"
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '7.4'
+          tools: composer:v2
+
+      - name: Generate version
+        id: generate-version
+        uses: HardNorth/github-version-generate@v1.0.1
+        with:
+          version-source: file
+          version-file: ${{ env.GITHUB_HOME }}/current-version
+          version-file-extraction-pattern: '[0-9.]+'
+
+      - name: Create Release
+        id: create-release
+        uses: ncipollo/release-action@v1
+        with:
+          token: ${{ secrets.ETSTAGING_TOKEN }}
+          commit: main
+          tag: ${{ steps.generate-version.outputs.NEXT_VERSION }}
