@@ -51,12 +51,9 @@ jobs:
           tag: ${{ steps.generate-version.outputs.NEXT_VERSION }}
 
       - name: Trigger Packagist Update
-        id: update-packagist
-        with:
-          token: ${{ secrets.PACKAGIST_TOKEN }}
         run: >
           curl
           -X POST
           -H 'content-type:application/json'
-          "https://packagist.org/api/update-package?username=elegantthemes&apiToken=${PACKAGIST_TOKEN}"
+          "https://packagist.org/api/update-package?username=elegantthemes&apiToken=${{ secrets.PACKAGIST_TOKEN }}"
           -d '{"repository":{"url":"https://packagist.org/packages/elegantthemes/hustle"}}'
