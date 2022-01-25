@@ -15,7 +15,7 @@ abstract class Base {
 	protected static function _key( string ...$args ): string {
 		$key = implode( ':', $args );
 
-		return "hustle:{$key}";
+		return "{hustle}:{$key}";
 	}
 
 	protected static function _uuid4(): string {
