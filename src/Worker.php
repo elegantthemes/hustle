@@ -71,7 +71,7 @@ class Worker extends Base {
 				continue;
 			}
 
-			$job_id = $this->pids[ $pid ] ?? '';
+			$job_id = $this->_pids[ $pid ] ?? '';
 
 			if ( ! $job_id ) {
 				et_error( 'Job id missing!' );

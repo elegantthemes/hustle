@@ -18,12 +18,15 @@ class Job extends Base implements JsonSerializable {
 
 	public string $id;
 
+	public string $queue;
+
 	public string $status;
 
 	public function __construct( string $id, array $details = [] ) {
 		$this->callbacks = $details['callbacks'];
 		$this->data      = $details['data'];
 		$this->id        = $details['id'];
+		$this->queue     = $details['queue'];
 		$this->status    = $details['status'];
 	}
 
@@ -38,6 +41,7 @@ class Job extends Base implements JsonSerializable {
 			$id = $details['id'] = self::_uuid4();
 
 			$details['status'] = 'pending';
+			$details['queue']  = $queue;
 
 			self::$_DB->set( self::_key( 'queues', $queue, 'jobs', $id ), json_encode( $details ) );
 
@@ -53,6 +57,7 @@ class Job extends Base implements JsonSerializable {
 			'id'        => $this->id,
 			'callbacks' => $this->callbacks,
 			'data'      => $this->data,
+			'queue'     => $this->queue,
 			'status'    => $this->status,
 		];
 	}

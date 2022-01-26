@@ -8,10 +8,14 @@ use Redis, RedisCluster;
 
 class Queue extends Base {
 
+	protected static array $_INSTANCES = [];
+
 	public string $name;
 
 	public function __construct( string $name = 'default' ) {
-		$this->name    = $name;
+		$this->name = $name;
+
+		self::$_INSTANCES[ $name ] = $this;
 	}
 
 	protected function __completed(): string {
@@ -36,6 +40,32 @@ class Queue extends Base {
 
 	public function JOB( string $job_id ): Job {
 		return Job::instance( $this->name, $job_id );
+	}
+
+	public static function done( Job $job ): void {
+		$queue = self::$_INSTANCES[ $job->queue ];
+
+		$job->status = 'completed';
+
+		self::$_DB->set( $queue->__key( 'jobs', $job->id ), json_encode( $job ) );
+
+		self::$_DB->lrem( $queue->__running(), $job->id, 0 );
+		self::$_DB->lpush( $queue->__completed(), $job->id );
+
+		// TODO: Enforce max number of jobs retained in completed status
+	}
+
+	public static function error( Job $job ): void {
+		$queue = self::$_INSTANCES[ $job->queue ];
+
+		$job->status = 'failed';
+
+		self::$_DB->set( $queue->__key( 'jobs', $job->id ), json_encode( $job ) );
+
+		self::$_DB->lrem( $queue->__running(), $job->id, 0 );
+		self::$_DB->lpush( $queue->__failed(), $job->id );
+
+		// TODO: Enforce max number of jobs retained in failed status
 	}
 
 	public function put( callable $run, array $data ): string {
