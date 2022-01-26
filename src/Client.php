@@ -24,7 +24,12 @@ class Client extends Base {
 
 		if ( count( $redis_nodes ) > 1 || is_string( reset( $redis_nodes ) ) ) {
 			// Redis Cluster
-			self::$_DB = new RedisCluster( null, $redis_nodes );
+			ini_set( 'redis.clusters.cache_slots', 1 );
+
+			self::$_DB = new RedisCluster( null, $redis_nodes, 1.5, 0 );
+
+			self::$_DB->setOption( RedisCluster::OPT_SLAVE_FAILOVER, RedisCluster::FAILOVER_DISTRIBUTE );
+
 		} else {
 			// Redis Standalone
 			throw new \ErrorException( 'Support for using redis in standalone mode is not implemented.' );
