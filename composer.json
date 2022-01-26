@@ -34,6 +34,13 @@
   },
   "require-dev": {
     "roave/security-advisories": "dev-master"
+  },
+  "scripts": {
+    "dev": [
+      "which devspace || yarn global add devspace || true",
+      "Composer\\Config::disableProcessTimeout",
+      "devspace sync --local-path=./src --container-path=/srv/cloud-screenshot/vendor/elegantthemes/hustle/src --initial-sync=preferLocal --upload-only --namespace=dc-screenshot"
+    ]
   }
 }
 

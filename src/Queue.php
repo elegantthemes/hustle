@@ -56,8 +56,11 @@ class Queue extends Base {
 	}
 
 	public function take(): Job {
-		$job_id = self::$_DB->brpoplpush( $this->__pending(), $this->__running(), 600 );
-		$job    = Job::instance( $this->name, $job_id );
+		while ( ! $job_id = self::$_DB->brpoplpush( $this->__pending(), $this->__running(), 600 ) ) {
+			sleep(1 );
+		}
+
+		$job = Job::instance( $this->name, $job_id );
 
 		$job->status = 'running';
 

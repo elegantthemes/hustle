@@ -36,3 +36,5 @@ vendor
 .DS_Store
 .AppleDouble
 .LSOverride
+
+.devspace

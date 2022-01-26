@@ -1,0 +1,17 @@
+version: v1beta9
+deployments:
+  - name: cloud-screenshot
+    helm:
+      chart:
+        name: ../../../devops/helm-charts/charts/cloud-screenshot
+dev:
+  sync:
+    - namespace: dc-screenshot
+      initialSync: preferLocal
+      labelSelector:
+        app: cloud-screenshot
+      localSubPath: ./src
+      containerPath: /srv/cloud-screenshot/vendor/elegantthemes/hustle/src
+      excludePaths:
+        - node_modules/
+        - .env
