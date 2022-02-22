@@ -123,22 +123,26 @@ class Worker extends Base {
 		self::$_DB->setex( $lock, 3600, 'true' );
 
 		while ( self::$_DB->exists( $lock ) ) {
-			// Grab and perform up to 1 queued job.
-			while ( count( $this->_jobs ) < 1 && $job = $this->_nextJob() ) {
-				$this->_jobs[ $job->id ] = $job;
-			}
-
-			if ( $this->_jobs ) {
-				try {
-					$this->_doJobs();
-				} catch ( \Exception $err ) {
-					et_error( $err->getMessage() );
+			try {
+				// Grab and perform up to 1 queued job.
+				while ( count( $this->_jobs ) < 1 && $job = $this->_nextJob() ) {
+					$this->_jobs[ $job->id ] = $job;
 				}
-			} else {
-				sleep( 5 );
+
+				if ( $this->_jobs ) {
+					try {
+						$this->_doJobs();
+					} catch ( \Exception $err ) {
+						et_error( $err->getMessage() );
+					}
+				}
+
+			} catch ( \ErrorException $err ) {
+				// Keep trying until our lock expires
 			}
 		}
 
+		// End this worker process so a fresh one can be started
 		die( 0 );
 	}
 }

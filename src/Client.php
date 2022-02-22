@@ -26,7 +26,7 @@ class Client extends Base {
 			// Redis Cluster
 			ini_set( 'redis.clusters.cache_slots', 1 );
 
-			self::$_DB = new RedisCluster( null, $redis_nodes, 2, 900, true );
+			self::$_DB = new RedisCluster( null, $redis_nodes, 5, 900, true );
 
 			self::$_DB->setOption( RedisCluster::OPT_SLAVE_FAILOVER, RedisCluster::FAILOVER_DISTRIBUTE );
 

@@ -18,6 +18,31 @@ abstract class Base {
 		return "{hustle}:{$key}";
 	}
 
+	protected static function _dbTry( string $method, ...$args ) {
+		$tried     = 0;
+		$max_tries = 5;
+		$error     = null;
+
+		while ( $tried < $max_tries ) {
+			try {
+				et_debug( ["Trying database call - {$tried}" => ['method' => $method, 'args' => $args]] );
+
+				return self::$_DB->$method( ...$args );
+
+			} catch ( \Exception $err ) {
+				if ( $tried = ( $max_tries - 1 ) ) {
+					$error = $err;
+				}
+			}
+
+			$tried++;
+		}
+
+		et_error( ["Max tries reached for a database call!" => ['method' => $method, 'args' => $args, 'error' => $error]] );
+
+		throw $error;
+	}
+
 	protected static function _uuid4(): string {
 		return sprintf(
 			'%04x%04x-%04x-%04x-%04x-%04x%04x%04x',

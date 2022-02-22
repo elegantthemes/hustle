@@ -33,7 +33,7 @@ class Job extends Base implements JsonSerializable {
 	public static function instance( string $queue, ?string $id, ?array $details = null ): self {
 		if ( $id ) {
 			// Get existing job details from database
-			$json    = self::$_DB->get( self::_key( 'queues', $queue, 'jobs', $id ) );
+			$json    = self::_dbTry( 'get', self::_key( 'queues', $queue, 'jobs', $id ) );
 			$details = json_decode( $json, true );
 
 		} else if ( $details ) {
@@ -43,7 +43,7 @@ class Job extends Base implements JsonSerializable {
 			$details['status'] = 'pending';
 			$details['queue']  = $queue;
 
-			self::$_DB->set( self::_key( 'queues', $queue, 'jobs', $id ), json_encode( $details ) );
+			self::_dbTry( 'set', self::_key( 'queues', $queue, 'jobs', $id ), json_encode( $details ) );
 
 		} else {
 			throw new ErrorException( 'At least one of $id, $details is required.' );
@@ -52,7 +52,7 @@ class Job extends Base implements JsonSerializable {
 		return new self( $id, $details );
 	}
 
-	public function jsonSerialize() {
+	public function jsonSerialize(): array {
 		return [
 			'id'        => $this->id,
 			'callbacks' => $this->callbacks,

@@ -47,12 +47,12 @@ class Queue extends Base {
 
 		$job->status = 'completed';
 
-		self::$_DB->set( $queue->__key( 'jobs', $job->id ), json_encode( $job ) );
+		self::_dbTry( 'set', $queue->__key( 'jobs', $job->id ), json_encode( $job ) );
+		self::_dbTry( 'lrem', $queue->__running(), $job->id, 0 );
+		self::_dbTry( 'lpush', $queue->__completed(), $job->id );
 
-		self::$_DB->lrem( $queue->__running(), $job->id, 0 );
-		self::$_DB->lpush( $queue->__completed(), $job->id );
-
-		// TODO: Enforce max number of jobs retained in completed status
+		// Don't allow completed list to grow beyond 200 entries.
+		self::_dbTry( 'ltrim', $queue->__completed(), 0, 199 );
 	}
 
 	public static function error( Job $job ): void {
@@ -60,12 +60,12 @@ class Queue extends Base {
 
 		$job->status = 'failed';
 
-		self::$_DB->set( $queue->__key( 'jobs', $job->id ), json_encode( $job ) );
+		self::_dbTry( 'set', $queue->__key( 'jobs', $job->id ), json_encode( $job ) );
+		self::_dbTry( 'lrem', $queue->__running(), $job->id, 0 );
+		self::_dbTry( 'lpush', $queue->__failed(), $job->id );
 
-		self::$_DB->lrem( $queue->__running(), $job->id, 0 );
-		self::$_DB->lpush( $queue->__failed(), $job->id );
-
-		// TODO: Enforce max number of jobs retained in failed status
+		// Don't allow failed list to grow beyond 200 entries.
+		self::_dbTry( 'ltrim', $queue->__failed(), 0, 199 );
 	}
 
 	public function put( callable $run, array $data ): string {
@@ -80,21 +80,21 @@ class Queue extends Base {
 
 		$job = Job::instance( $this->name, null, $details );
 
-		self::$_DB->lpush( $this->__pending(), $job->id );
+		self::_dbTry( 'lpush', $this->__pending(), $job->id );
 
 		return $job->id;
 	}
 
 	public function take(): Job {
-		while ( ! $job_id = self::$_DB->brpoplpush( $this->__pending(), $this->__running(), 600 ) ) {
-			sleep(1 );
+		if ( ! $job_id = self::$_DB->brpoplpush( $this->__pending(), $this->__running(), 600 ) ) {
+			throw new \ErrorException( 'Timedout waiting for more work.' );
 		}
 
 		$job = Job::instance( $this->name, $job_id );
 
 		$job->status = 'running';
 
-		self::$_DB->set( $this->__key( 'jobs', $job_id ), json_encode( $job ) );
+		self::_dbTry( 'set', $this->__key( 'jobs', $job_id ), json_encode( $job ) );
 
 		return $job;
 	}
