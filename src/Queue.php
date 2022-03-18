@@ -51,6 +51,9 @@ class Queue extends Base {
 		self::_dbTry( 'lrem', $queue->__running(), $job->id, 0 );
 		self::_dbTry( 'lpush', $queue->__completed(), $job->id );
 
+		// Set expiration for job data after which it will automatically be removed by redis
+		self::_dbTry( 'expire', $queue->__key( 'jobs', $job->id ), 60 * 60 * 12 );
+
 		// Don't allow completed list to grow beyond 200 entries.
 		self::_dbTry( 'ltrim', $queue->__completed(), 0, 199 );
 	}
@@ -63,6 +66,9 @@ class Queue extends Base {
 		self::_dbTry( 'set', $queue->__key( 'jobs', $job->id ), json_encode( $job ) );
 		self::_dbTry( 'lrem', $queue->__running(), $job->id, 0 );
 		self::_dbTry( 'lpush', $queue->__failed(), $job->id );
+
+		// Set expiration for job data after which it will automatically be removed by redis
+		self::_dbTry( 'expire', $queue->__key( 'jobs', $job->id ), 60 * 60 * 12 );
 
 		// Don't allow failed list to grow beyond 200 entries.
 		self::_dbTry( 'ltrim', $queue->__failed(), 0, 199 );
