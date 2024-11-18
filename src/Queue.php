@@ -91,6 +91,15 @@ class Queue extends Base {
 		return $job->id;
 	}
 
+	public function status(): array {
+		return [
+			'running'   => self::_dbTry( 'llen', $this->__running() ),
+			'pending'   => self::_dbTry( 'llen', $this->__pending() ),
+			'completed' => self::_dbTry( 'llen', $this->__completed() ),
+			'failed'    => self::_dbTry( 'llen', $this->__failed() ),
+		];
+	}
+
 	public function take(): Job {
 		if ( ! $job_id = self::$_DB->brpoplpush( $this->__pending(), $this->__running(), 600 ) ) {
 			throw new \ErrorException( 'Timedout waiting for more work.' );
