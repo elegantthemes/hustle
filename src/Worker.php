@@ -132,13 +132,13 @@ class Worker extends Base {
 				if ( $this->_jobs ) {
 					try {
 						$this->_doJobs();
-					} catch ( \Exception $err ) {
+					} catch ( \Throwable $err ) {
 						et_error( $err->getMessage() );
 					}
 				}
 
-			} catch ( \ErrorException $err ) {
-				// Keep trying until our lock expires
+			} catch ( \Throwable $err ) {
+				et_error( $err->getMessage() );
 			}
 		}
 
