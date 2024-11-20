@@ -138,7 +138,11 @@ class Worker extends Base {
 				}
 
 			} catch ( \Throwable $err ) {
-				et_error( $err->getMessage() );
+				$msg = $err->getMessage();
+
+				if ( 'Timedout waiting for more work.' !== $msg ) {
+					et_error( $msg );
+				}
 			}
 		}
 
