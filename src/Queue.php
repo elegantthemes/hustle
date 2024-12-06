@@ -59,7 +59,7 @@ class Queue extends Base {
 		self::_dbTry( 'ltrim', $queue->__completed(), 0, 199 );
 
 		// Store the total time taken to complete the job
-		self::_dbTry('set', $queue->__key('job-duration'), $completed_at - $job->created_at);
+		self::_dbTry('setex', $queue->__key('job-duration'), 10, $completed_at - $job->created_at);
 	}
 
 	public static function error( Job $job ): void {
@@ -101,7 +101,7 @@ class Queue extends Base {
 			'pending'      => self::_dbTry( 'llen', $this->__pending() ),
 			'completed'    => self::_dbTry( 'llen', $this->__completed() ),
 			'failed'       => self::_dbTry( 'llen', $this->__failed() ),
-			'job-duration' => self::_dbTry('get', $this->__key('job-duration')),
+			'job-duration' => (int) self::_dbTry('get', $this->__key('job-duration')),
 		];
 	}
 
