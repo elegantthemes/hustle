@@ -41,7 +41,7 @@ jobs:
           version-source: file
           version-file: ${{ github.workspace }}/../current-version
           version-file-extraction-pattern: '[0-9.]+'
-          next-version-increment-major: true
+          next-version-increment-major: false
           next-version-increment-minor: false
 
       - name: Create Release
