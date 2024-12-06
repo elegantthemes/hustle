@@ -14,6 +14,8 @@ class Job extends Base implements JsonSerializable {
 		'error' => null,
 	];
 
+	public int $created_at;
+
 	public array $data;
 
 	public string $id;
@@ -28,6 +30,8 @@ class Job extends Base implements JsonSerializable {
 		$this->id        = $details['id'];
 		$this->queue     = $details['queue'];
 		$this->status    = $details['status'];
+
+		$this->created_at = time();
 	}
 
 	public static function instance( string $queue, ?string $id, ?array $details = null ): self {
@@ -54,11 +58,12 @@ class Job extends Base implements JsonSerializable {
 
 	public function jsonSerialize(): array {
 		return [
-			'id'        => $this->id,
-			'callbacks' => $this->callbacks,
-			'data'      => $this->data,
-			'queue'     => $this->queue,
-			'status'    => $this->status,
+			'id'         => $this->id,
+			'callbacks'  => $this->callbacks,
+			'created_at' => $this->created_at,
+			'data'       => $this->data,
+			'queue'      => $this->queue,
+			'status'     => $this->status,
 		];
 	}
 }

@@ -43,7 +43,8 @@ class Queue extends Base {
 	}
 
 	public static function done( Job $job ): void {
-		$queue = self::$_INSTANCES[ $job->queue ];
+		$completed_at = time();
+		$queue        = self::$_INSTANCES[ $job->queue ];
 
 		$job->status = 'completed';
 
@@ -56,6 +57,9 @@ class Queue extends Base {
 
 		// Don't allow completed list to grow beyond 200 entries.
 		self::_dbTry( 'ltrim', $queue->__completed(), 0, 199 );
+
+		// Store the total time taken to complete the job
+		self::_dbTry('set', $queue->__key('job-duration'), $completed_at - $job->created_at);
 	}
 
 	public static function error( Job $job ): void {
@@ -93,10 +97,11 @@ class Queue extends Base {
 
 	public function status(): array {
 		return [
-			'running'   => self::_dbTry( 'llen', $this->__running() ),
-			'pending'   => self::_dbTry( 'llen', $this->__pending() ),
-			'completed' => self::_dbTry( 'llen', $this->__completed() ),
-			'failed'    => self::_dbTry( 'llen', $this->__failed() ),
+			'running'      => self::_dbTry( 'llen', $this->__running() ),
+			'pending'      => self::_dbTry( 'llen', $this->__pending() ),
+			'completed'    => self::_dbTry( 'llen', $this->__completed() ),
+			'failed'       => self::_dbTry( 'llen', $this->__failed() ),
+			'job-duration' => self::_dbTry('get', $this->__key('job-duration')),
 		];
 	}
 
