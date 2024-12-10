@@ -25,13 +25,12 @@ class Job extends Base implements JsonSerializable {
 	public string $status;
 
 	public function __construct( string $id, array $details = [] ) {
-		$this->callbacks = $details['callbacks'];
-		$this->data      = $details['data'];
-		$this->id        = $details['id'];
-		$this->queue     = $details['queue'];
-		$this->status    = $details['status'];
-
-		$this->created_at = time();
+		$this->callbacks  = $details['callbacks'];
+		$this->data       = $details['data'];
+		$this->id         = $details['id'];
+		$this->queue      = $details['queue'];
+		$this->status     = $details['status'];
+		$this->created_at = $details['created_at'];
 	}
 
 	public static function instance( string $queue, ?string $id, ?array $details = null ): self {
@@ -44,8 +43,9 @@ class Job extends Base implements JsonSerializable {
 			// Create new job in database
 			$id = $details['id'] = self::_uuid4();
 
-			$details['status'] = 'pending';
-			$details['queue']  = $queue;
+			$details['status']     = 'pending';
+			$details['queue']      = $queue;
+			$details['created_at'] = time();
 
 			self::_dbTry( 'set', self::_key( 'queues', $queue, 'jobs', $id ), json_encode( $details ) );
 
