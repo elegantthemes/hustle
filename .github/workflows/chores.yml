@@ -10,10 +10,10 @@ jobs:
   #==============================#
   DispatchToMetaRepo:
     if: "github.actor != 'etstaging' && ! contains(toJSON(github.event.commits.*.message), 'build: [ release ]')"
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-latest
     steps:
       - name: Repository Dispatch
-        uses: peter-evans/repository-dispatch@v1
+        uses: peter-evans/repository-dispatch@v3
         with:
           token: ${{ secrets.ETSTAGING_TOKEN }}
           repository: elegantthemes/meta

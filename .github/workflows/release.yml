@@ -4,19 +4,16 @@ on:
     branches:
       - main
 
-env:
-  ACTIONS_ALLOW_UNSECURE_COMMANDS: true
-
 jobs:
   #==========================#
   # 1. Create GitHub Release #
   #==========================#
   CreateGitHubRelease:
     if: "contains(toJSON(github.event.commits.*.message), 'build: [release]')"
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@v2
+        uses: actions/checkout@v6
         with:
           token: ${{ secrets.ETSTAGING_TOKEN }}
 
@@ -31,18 +28,18 @@ jobs:
       - name: Setup PHP
         uses: shivammathur/setup-php@v2
         with:
-          php-version: '7.4'
+          php-version: '8.3'
           tools: composer:v2
 
       - name: Generate version
         id: generate-version
-        uses: HardNorth/github-version-generate@v1.0.1
+        uses: HardNorth/github-version-generate@v1.4.0
         with:
           version-source: file
           version-file: ${{ github.workspace }}/../current-version
           version-file-extraction-pattern: '[0-9.]+'
           next-version-increment-major: false
-          next-version-increment-minor: false
+          next-version-increment-minor: true
 
       - name: Create Release
         id: create-release
