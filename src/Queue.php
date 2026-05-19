@@ -106,9 +106,12 @@ class Queue extends Base {
 	}
 
 	public function take(): Job {
-		// BLMOVE replaces the deprecated BRPOPLPUSH (deprecated in Redis 6.2).
-		// Pops from the right of the pending list and pushes to the left of the running list.
-		$job_id = self::$_DB->blmove( $this->__pending(), $this->__running(), 'RIGHT', 'LEFT', 600 );
+		// Prefer BLMOVE when supported, but fall back to BRPOPLPUSH for older phpredis builds.
+		if ( method_exists( self::$_DB, 'blmove' ) ) {
+			$job_id = self::$_DB->blmove( $this->__pending(), $this->__running(), 'RIGHT', 'LEFT', 600 );
+		} else {
+			$job_id = self::$_DB->brpoplpush( $this->__pending(), $this->__running(), 600 );
+		}
 
 		if ( ! $job_id ) {
 			throw new \ErrorException( 'Timedout waiting for more work.' );
