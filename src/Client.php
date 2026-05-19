@@ -15,7 +15,10 @@ class Client extends Base {
 
 	public string $name;
 
-	public function __construct( string $name = 'default', string|array $redis_nodes = [] ) {
+	/**
+	 * @param string|array $redis_nodes Standalone Redis host:port string or Redis Cluster seed node list.
+	 */
+	public function __construct( string $name = 'default', $redis_nodes = [] ) {
 		$this->name = $name;
 
 		if ( ! $redis_nodes ) {
