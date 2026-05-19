@@ -30,7 +30,7 @@
   "require": {
     "php": ">=7.4",
     "ext-redis": ">=5.3.5",
-    "elegantthemes/ease": "1.2.4"
+    "elegantthemes/ease": "1.2.6"
   },
   "require-dev": {
     "roave/security-advisories": "dev-master"
@@ -43,4 +43,3 @@
     ]
   }
 }
-
