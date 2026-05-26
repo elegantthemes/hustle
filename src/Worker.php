@@ -35,8 +35,8 @@ class Worker extends Base {
 				// Child Process
 				try {
 					call_user_func( $job->callbacks['run'], $job->id, $job->data );
-				} catch ( \Exception $err ) {
-					et_error( $err->getMessage() );
+				} catch ( \Throwable $err ) {
+					et_error( self::_formatThrowable( $err ) );
 					die( 1 );
 				}
 
@@ -48,6 +48,21 @@ class Worker extends Base {
 				$this->_pids[ $pid ] = $job->id;
 				break;
 		}
+	}
+
+	protected static function _formatThrowable( \Throwable $err ): string {
+		$message = trim( $err->getMessage() );
+
+		if ( '' === $message ) {
+			$message = sprintf(
+				'%s thrown in %s:%d',
+				get_class( $err ),
+				$err->getFile(),
+				$err->getLine()
+			);
+		}
+
+		return $message;
 	}
 
 	protected function _doJobs(): void {
@@ -133,12 +148,12 @@ class Worker extends Base {
 					try {
 						$this->_doJobs();
 					} catch ( \Throwable $err ) {
-						et_error( $err->getMessage() );
+						et_error( self::_formatThrowable( $err ) );
 					}
 				}
 
 			} catch ( \Throwable $err ) {
-				$msg = $err->getMessage();
+				$msg = self::_formatThrowable( $err );
 
 				if ( 'Timedout waiting for more work.' !== $msg ) {
 					et_error( $msg );
