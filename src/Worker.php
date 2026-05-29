@@ -95,12 +95,12 @@ class Worker extends Base {
 
 			$job = $this->_jobs[ $job_id ];
 
-			if ( pcntl_wifexited( $status ) ) {
-				// Child process exited normally.
+			if ( pcntl_wifexited( $status ) && 0 === pcntl_wexitstatus( $status ) ) {
+				// Child process completed successfully.
 				call_user_func( $job->callbacks['done'], $job );
 
 			} else {
-				// Child process exited with error status.
+				// Non-zero exit codes and signals should both mark the job as failed.
 				call_user_func( $job->callbacks['error'], $job );
 			}
 
