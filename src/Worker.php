@@ -9,6 +9,8 @@ use function et_;
 
 class Worker extends Base {
 
+	protected const JOB_TIMEOUT = 120;
+
 	protected static string $_COUNT;
 
 	protected array $_jobs = [];
@@ -74,7 +76,7 @@ class Worker extends Base {
 		$started = time();
 
 		// Wait for currently running tasks to finish
-		while ( $this->_pids && ( time() - $started ) < 120 ) {
+		while ( $this->_pids && ( time() - $started ) < self::JOB_TIMEOUT ) {
 			$status = null;
 
 			pcntl_signal_dispatch();
@@ -139,6 +141,12 @@ class Worker extends Base {
 
 		while ( self::$_DB->exists( $lock ) ) {
 			try {
+				$failed_stale_jobs = $this->_queue->failStaleRunning();
+
+				if ( $failed_stale_jobs ) {
+					et_error( "Marked {$failed_stale_jobs} stale running jobs as failed." );
+				}
+
 				// Grab and perform up to 1 queued job.
 				while ( count( $this->_jobs ) < 1 && $job = $this->_nextJob() ) {
 					$this->_jobs[ $job->id ] = $job;

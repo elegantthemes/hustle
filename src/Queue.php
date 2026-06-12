@@ -8,6 +8,9 @@ use Redis, RedisCluster;
 
 class Queue extends Base {
 
+	protected const BLOCKING_TAKE_TIMEOUT = 30;
+	protected const STALE_RUNNING_AFTER   = 150;
+
 	protected static array $_INSTANCES = [];
 
 	public string $name;
@@ -105,12 +108,44 @@ class Queue extends Base {
 		];
 	}
 
+	public function failStaleRunning(): int {
+		$failed  = 0;
+		$job_ids = self::_dbTry( 'lrange', $this->__running(), 0, -1 );
+		$now     = time();
+
+		if ( ! is_array( $job_ids ) ) {
+			return $failed;
+		}
+
+		foreach ( array_unique( $job_ids ) as $job_id ) {
+			$json    = self::_dbTry( 'get', $this->__key( 'jobs', $job_id ) );
+			$details = $json ? json_decode( $json, true ) : null;
+
+			if ( ! is_array( $details ) ) {
+				self::_dbTry( 'lrem', $this->__running(), $job_id, 0 );
+				continue;
+			}
+
+			$job = new Job( $job_id, $details );
+
+			if ( ( $now - $job->started_at ) < self::STALE_RUNNING_AFTER ) {
+				continue;
+			}
+
+			self::error( $job );
+
+			$failed++;
+		}
+
+		return $failed;
+	}
+
 	public function take(): Job {
 		// Prefer BLMOVE when supported, but fall back to BRPOPLPUSH for older phpredis builds.
 		if ( method_exists( self::$_DB, 'blmove' ) ) {
-			$job_id = self::$_DB->blmove( $this->__pending(), $this->__running(), 'RIGHT', 'LEFT', 600 );
+			$job_id = self::$_DB->blmove( $this->__pending(), $this->__running(), 'RIGHT', 'LEFT', self::BLOCKING_TAKE_TIMEOUT );
 		} else {
-			$job_id = self::$_DB->brpoplpush( $this->__pending(), $this->__running(), 600 );
+			$job_id = self::$_DB->brpoplpush( $this->__pending(), $this->__running(), self::BLOCKING_TAKE_TIMEOUT );
 		}
 
 		if ( ! $job_id ) {
@@ -119,7 +154,8 @@ class Queue extends Base {
 
 		$job = Job::instance( $this->name, $job_id );
 
-		$job->status = 'running';
+		$job->status     = 'running';
+		$job->started_at = time();
 
 		self::_dbTry( 'set', $this->__key( 'jobs', $job_id ), json_encode( $job ) );
 

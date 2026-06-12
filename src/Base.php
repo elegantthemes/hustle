@@ -25,8 +25,6 @@ abstract class Base {
 
 		while ( $tried < $max_tries ) {
 			try {
-				et_debug( ["Trying database call - {$tried}" => ['method' => $method, 'args' => $args]] );
-
 				return self::$_DB->$method( ...$args );
 
 			} catch ( \Exception $err ) {

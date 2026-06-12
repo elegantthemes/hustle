@@ -22,6 +22,8 @@ class Job extends Base implements JsonSerializable {
 
 	public string $queue;
 
+	public int $started_at;
+
 	public string $status;
 
 	public function __construct( string $id, array $details = [] ) {
@@ -31,6 +33,7 @@ class Job extends Base implements JsonSerializable {
 		$this->queue      = $details['queue'];
 		$this->status     = $details['status'];
 		$this->created_at = $details['created_at'];
+		$this->started_at = (int) ( $details['started_at'] ?? 0 );
 	}
 
 	public static function instance( string $queue, ?string $id, ?array $details = null ): self {
@@ -63,6 +66,7 @@ class Job extends Base implements JsonSerializable {
 			'created_at' => $this->created_at,
 			'data'       => $this->data,
 			'queue'      => $this->queue,
+			'started_at' => $this->started_at,
 			'status'     => $this->status,
 		];
 	}
